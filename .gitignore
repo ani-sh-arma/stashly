@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 _generated/
+
+# npm lock file (project uses bun)
+package-lock.json
