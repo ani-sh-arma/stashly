@@ -170,12 +170,12 @@ export function LinkCard({
         )}
       </div>
 
-      {/* Delete button (appears on hover) */}
+      {/* Delete button (appears on hover/focus) */}
       <button
         onClick={handleDelete}
         disabled={deleting}
         aria-label="Delete link"
-        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-gray-900/80 border border-gray-700/50 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-950/80 hover:border-red-800/50 transition-all duration-200 disabled:cursor-not-allowed"
+        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-gray-900/80 border border-gray-700/50 flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto hover:bg-red-950/80 hover:border-red-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 transition-all duration-200 disabled:cursor-not-allowed"
       >
         {deleting ? (
           <svg
