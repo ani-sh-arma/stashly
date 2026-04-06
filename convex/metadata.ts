@@ -69,65 +69,68 @@ export const fetchUrlMetadata = action({
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; Stashly/1.0; +https://stashly.app)",
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5",
-        },
-        redirect: "follow",
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        return { error: `HTTP ${response.status}` };
-      }
-
-      const contentType = response.headers.get("content-type") ?? "";
-      let hostname = "";
       try {
-        hostname = new URL(url).hostname.replace(/^www\./, "");
-      } catch {
-        /* ignore */
+        const response = await fetch(url, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (compatible; Stashly/1.0; +https://stashly.app)",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+          },
+          redirect: "follow",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          return { error: `HTTP ${response.status}` };
+        }
+
+        const contentType = response.headers.get("content-type") ?? "";
+        let hostname = "";
+        try {
+          hostname = new URL(url).hostname.replace(/^www\./, "");
+        } catch {
+          /* ignore */
+        }
+
+        if (!contentType.includes("html")) {
+          return {
+            hostname,
+            favicon: `https://${hostname}/favicon.ico`,
+          };
+        }
+
+        const html = await response.text();
+        // Limit to first 100 KB to avoid memory issues on very large pages
+        const htmlSlice =
+          html.length > 102400 ? html.substring(0, 102400) : html;
+
+        const title =
+          extractMetaContent(htmlSlice, "og:title", "twitter:title") ??
+          extractTitle(htmlSlice) ??
+          hostname;
+
+        const description =
+          extractMetaContent(
+            htmlSlice,
+            "og:description",
+            "twitter:description",
+            "description",
+          ) ?? undefined;
+
+        const image =
+          extractMetaContent(htmlSlice, "og:image", "twitter:image") ?? undefined;
+
+        const siteName =
+          extractMetaContent(htmlSlice, "og:site_name") ?? hostname;
+
+        const favicon = extractFavicon(htmlSlice, url);
+
+        return { title, description, image, siteName, hostname, favicon };
+      } finally {
+        clearTimeout(timeout);
       }
-
-      if (!contentType.includes("html")) {
-        return {
-          hostname,
-          favicon: `https://${hostname}/favicon.ico`,
-        };
-      }
-
-      const html = await response.text();
-      // Limit to first 100 KB to avoid memory issues on very large pages
-      const htmlSlice = html.length > 102400 ? html.substring(0, 102400) : html;
-
-      const title =
-        extractMetaContent(htmlSlice, "og:title", "twitter:title") ??
-        extractTitle(htmlSlice) ??
-        hostname;
-
-      const description =
-        extractMetaContent(
-          htmlSlice,
-          "og:description",
-          "twitter:description",
-          "description",
-        ) ?? undefined;
-
-      const image =
-        extractMetaContent(htmlSlice, "og:image", "twitter:image") ?? undefined;
-
-      const siteName =
-        extractMetaContent(htmlSlice, "og:site_name") ?? hostname;
-
-      const favicon = extractFavicon(htmlSlice, url);
-
-      return { title, description, image, siteName, hostname, favicon };
     } catch (e: unknown) {
       if (e instanceof Error && e.name === "AbortError") {
         return { error: "Request timed out" };
