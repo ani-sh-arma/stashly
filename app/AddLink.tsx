@@ -144,7 +144,7 @@ export function AddLink({ onClose }: AddLinkProps) {
         {/* Header */}
         <div className="px-6 pt-4 pb-4 border-b border-gray-800/60 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
               <svg
                 className="w-3.5 h-3.5 text-white"
                 fill="none"

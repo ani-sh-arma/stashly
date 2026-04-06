@@ -83,9 +83,9 @@ export function LinkCard({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block flex-shrink-0"
+        className="block shrink-0"
       >
-        <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
+        <div className="aspect-video bg-linear-to-br from-gray-800 to-gray-900 overflow-hidden">
           {image && !imgError ? (
             <img
               src={image}
@@ -95,7 +95,7 @@ export function LinkCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-700/20 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-600/20 to-indigo-600/20 border border-violet-700/20 flex items-center justify-center">
                 {favicon && !faviconError ? (
                   <img
                     src={favicon}
@@ -122,16 +122,16 @@ export function LinkCard({
             <img
               src={favicon}
               alt={domain}
-              className="w-4 h-4 rounded-sm flex-shrink-0"
+              className="w-4 h-4 rounded-sm shrink-0"
               onError={() => setFaviconError(true)}
             />
           ) : (
-            <div className="w-4 h-4 rounded-sm bg-violet-700/30 flex-shrink-0" />
+            <div className="w-4 h-4 rounded-sm bg-violet-700/30 shrink-0" />
           )}
           <span className="text-xs text-gray-500 truncate">
             {siteName || domain}
           </span>
-          <span className="ml-auto text-xs text-gray-600 flex-shrink-0">
+          <span className="ml-auto text-xs text-gray-600 shrink-0">
             {formatDate(createdAt)}
           </span>
         </div>
