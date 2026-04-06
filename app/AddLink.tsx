@@ -196,7 +196,14 @@ export function AddLink({ onClose }: AddLinkProps) {
                 type="url"
                 placeholder="https://example.com"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  const nextUrl = e.target.value;
+                  setUrl(nextUrl);
+                  if (nextUrl !== url) {
+                    setMetadata(null);
+                    setImgError(false);
+                  }
+                }}
                 onBlur={handleUrlBlur}
                 onKeyDown={handleUrlKeyDown}
                 className="flex-1 px-3.5 py-2.5 bg-gray-800/70 border border-gray-700/50 rounded-xl text-gray-100 placeholder-gray-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/20 text-sm transition-all"
