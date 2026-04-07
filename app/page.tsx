@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { LinkCard } from "./components/LinkCard";
 import { AddLink } from "./AddLink";
 
 export default function Home() {
+  const { user } = useUser();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -51,27 +53,39 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Add link button */}
-          <button
-            onClick={() => setShowAddLink(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-900/30 active:scale-95"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Right side: User button + Add link */}
+          <div className="flex items-center gap-3">
+            {/* Add link button */}
+            <button
+              onClick={() => setShowAddLink(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-900/30 active:scale-95"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span className="hidden sm:inline">Add Link</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="hidden sm:inline">Add Link</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+
+            {/* User profile button */}
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                },
+              }}
+            />
+          </div>
         </div>
       </header>
 
@@ -79,7 +93,9 @@ export default function Home() {
       <section className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800/40 py-10 px-4">
         <div className="max-w-2xl mx-auto text-center mb-7">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2 tracking-tight">
-            Your Link Collection
+            {user?.firstName
+              ? `${user.firstName}'s Link Collection`
+              : "Your Link Collection"}
           </h1>
           <p className="text-gray-500 text-sm">
             {links === undefined
