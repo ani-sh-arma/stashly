@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
+import { clerkAppearance } from "../../clerkAppearance";
 
 export default function SignInPage() {
   return (
@@ -24,8 +25,7 @@ export default function SignInPage() {
             Stashly
           </span>
         </div>
-        <SignIn
-        />
+        <SignIn appearance={clerkAppearance} />
       </div>
     </main>
   );

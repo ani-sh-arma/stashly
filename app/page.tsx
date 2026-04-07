@@ -6,6 +6,7 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { LinkCard } from "./components/LinkCard";
 import { AddLink } from "./AddLink";
+import { clerkUserButtonAppearance } from "./clerkAppearance";
 
 export default function Home() {
   const { user } = useUser();
@@ -75,13 +76,7 @@ export default function Home() {
             </button>
 
             {/* User profile button */}
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8",
-                },
-              }}
-            />
+            <UserButton appearance={clerkUserButtonAppearance} />
           </div>
         </div>
       </header>
