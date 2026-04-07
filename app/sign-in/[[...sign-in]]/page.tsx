@@ -5,7 +5,7 @@ export default function SignInPage() {
     <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
             <svg
               className="w-5 h-5 text-white"
               fill="none"
@@ -20,11 +20,12 @@ export default function SignInPage() {
               />
             </svg>
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold bg-linear-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
             Stashly
           </span>
         </div>
-        <SignIn />
+        <SignIn
+        />
       </div>
     </main>
   );

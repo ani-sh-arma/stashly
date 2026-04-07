@@ -83,29 +83,13 @@ export default function Home() {
               }}
             />
           </div>
-          {/* Add link button */}
-          <button
-            onClick={() => setShowAddLink(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-background text-sm font-semibold hover:bg-accent-primary/90 transition-smooth active:scale-95"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span className="hidden sm:inline">Add Link</span>
-            <span className="sm:hidden">Add</span>
-          </button>
         </div>
       </header>
 
       {/* Hero / Search section */}
       <section className="border-b border-border-primary py-8 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="text-center">
+          {/* <div className="text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
               {user?.firstName
               ? `${user.firstName}'s Link Collection`
@@ -118,7 +102,7 @@ export default function Home() {
                   ? "Save and organize your favorite links"
                   : `${links.length} link${links.length !== 1 ? "s" : ""}`}
             </p>
-          </div>
+          </div> */}
 
           {/* Search bar */}
           <div className="relative">
@@ -150,7 +134,12 @@ export default function Home() {
                 className="absolute inset-y-0 right-3 flex items-center text-foreground/40 hover:text-foreground/60 transition-colors"
                 aria-label="Clear search"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -184,9 +173,7 @@ export default function Home() {
             {allTags.map((tag) => (
               <button
                 key={tag}
-                onClick={() =>
-                  setSelectedTag(selectedTag === tag ? null : tag)
-                }
+                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
                   selectedTag === tag
                     ? "bg-accent-primary text-background"
@@ -341,4 +328,3 @@ export default function Home() {
     </main>
   );
 }
-
