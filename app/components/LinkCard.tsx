@@ -82,7 +82,7 @@ export function LinkCard({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block flex-shrink-0"
+        className="block shrink-0"
       >
         <div className="aspect-video bg-surface-secondary overflow-hidden relative">
           {image && !imgError ? (
