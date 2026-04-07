@@ -177,7 +177,7 @@ export function AddLink({ onClose }: AddLinkProps) {
         </div>
 
         {/* Header */}
-        <div className="px-5 pt-3 pb-3 border-b border-border-primary flex items-center justify-between flex-shrink-0">
+        <div className="px-5 pt-3 pb-3 border-b border-border-primary flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md bg-accent-primary/20 border border-accent-primary/30 flex items-center justify-center">
               <svg
@@ -289,7 +289,7 @@ export function AddLink({ onClose }: AddLinkProps) {
                 {metadata?.error && (
                   <div className="flex items-start gap-2 text-xs text-amber-300 bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2.5">
                     <svg
-                      className="w-4 h-4 mt-0.5 flex-shrink-0"
+                      className="w-4 h-4 mt-0.5 shrink-0"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -390,7 +390,7 @@ export function AddLink({ onClose }: AddLinkProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-border-primary flex gap-3 flex-shrink-0">
+        <div className="px-5 py-3 border-t border-border-primary flex gap-3 shrink-0">
           <button
             onClick={onClose}
             className="flex-1 py-2 rounded-lg border border-border-primary text-foreground/70 text-sm font-medium hover:bg-surface-secondary transition-smooth"

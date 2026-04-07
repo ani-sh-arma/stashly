@@ -93,7 +93,7 @@ export function LinkCard({
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-secondary to-surface-tertiary">
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-surface-secondary to-surface-tertiary">
               <div className="w-12 h-12 rounded-lg bg-accent-primary/15 border border-accent-primary/20 flex items-center justify-center">
                 {favicon && !faviconError ? (
                   <img
@@ -121,16 +121,16 @@ export function LinkCard({
             <img
               src={favicon}
               alt={domain}
-              className="w-3.5 h-3.5 rounded-sm flex-shrink-0"
+              className="w-3.5 h-3.5 rounded-sm shrink-0"
               onError={() => setFaviconError(true)}
             />
           ) : (
-            <div className="w-3.5 h-3.5 rounded-sm bg-accent-primary/20 flex-shrink-0" />
+            <div className="w-3.5 h-3.5 rounded-sm bg-accent-primary/20 shrink-0" />
           )}
           <span className="text-xs text-foreground/60 truncate font-medium">
             {siteName || domain}
           </span>
-          <span className="ml-auto text-xs text-foreground/40 flex-shrink-0 whitespace-nowrap">
+          <span className="ml-auto text-xs text-foreground/40 shrink-0 whitespace-nowrap">
             {formatDate(createdAt)}
           </span>
         </div>

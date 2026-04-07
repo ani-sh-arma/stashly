@@ -55,7 +55,7 @@ export default function Home() {
             {/* Add link button */}
             <button
               onClick={() => setShowAddLink(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-900/30 active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-900/30 active:scale-95"
             >
               <svg
                 className="w-4 h-4"
@@ -168,12 +168,12 @@ export default function Home() {
       {allTags && allTags.length > 0 && (
         <div className="border-b border-border-primary px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-            <span className="text-xs text-foreground/50 flex-shrink-0 font-medium">
+            <span className="text-xs text-foreground/50 shrink-0 font-medium">
               Filter:
             </span>
             <button
               onClick={() => setSelectedTag(null)}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
                 !selectedTag
                   ? "bg-accent-primary text-background"
                   : "bg-surface-secondary text-foreground/60 hover:text-foreground/80"
@@ -187,7 +187,7 @@ export default function Home() {
                 onClick={() =>
                   setSelectedTag(selectedTag === tag ? null : tag)
                 }
-                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
                   selectedTag === tag
                     ? "bg-accent-primary text-background"
                     : "bg-surface-secondary text-foreground/60 hover:text-foreground/80"
