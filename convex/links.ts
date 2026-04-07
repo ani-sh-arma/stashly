@@ -14,8 +14,11 @@ export const addLink = mutation({
     siteName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     return await ctx.db.insert("links", {
       ...args,
+      userId: identity.tokenIdentifier,
       createdAt: Date.now(),
     });
   },
@@ -27,9 +30,14 @@ export const getLinks = query({
     tag: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
     let links = await ctx.db
       .query("links")
-      .withIndex("by_created")
+      .withIndex("by_user_and_created", (q) =>
+        q.eq("userId", identity.tokenIdentifier),
+      )
       .order("desc")
       .collect();
 
@@ -57,13 +65,27 @@ export const getLinks = query({
 export const deleteLink = mutation({
   args: { id: v.id("links") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const link = await ctx.db.get(args.id);
+    if (!link || link.userId !== identity.tokenIdentifier) {
+      throw new Error("Not authorized");
+    }
     await ctx.db.delete(args.id);
   },
 });
 
 export const getAllTags = query({
+  args: {},
   handler: async (ctx) => {
-    const links = await ctx.db.query("links").collect();
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const links = await ctx.db
+      .query("links")
+      .withIndex("by_user_and_created", (q) =>
+        q.eq("userId", identity.tokenIdentifier),
+      )
+      .collect();
     const tagSet = new Set<string>();
     links.forEach((l) => l.tags.forEach((t) => tagSet.add(t)));
     return Array.from(tagSet).sort();

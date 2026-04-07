@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { LinkCard } from "./components/LinkCard";
 import { AddLink } from "./AddLink";
 
 export default function Home() {
+  const { user } = useUser();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -48,6 +50,39 @@ export default function Home() {
             <span className="text-lg font-bold text-foreground">Stashly</span>
           </div>
 
+          {/* Right side: User button + Add link */}
+          <div className="flex items-center gap-3">
+            {/* Add link button */}
+            <button
+              onClick={() => setShowAddLink(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-900/30 active:scale-95"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="hidden sm:inline">Add Link</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+
+            {/* User profile button */}
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                },
+              }}
+            />
+          </div>
           {/* Add link button */}
           <button
             onClick={() => setShowAddLink(true)}
@@ -72,7 +107,9 @@ export default function Home() {
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-              Your Link Collection
+              {user?.firstName
+              ? `${user.firstName}'s Link Collection`
+              : "Your Link Collection"}
             </h1>
             <p className="text-foreground/60 text-sm">
               {links === undefined
@@ -131,12 +168,12 @@ export default function Home() {
       {allTags && allTags.length > 0 && (
         <div className="border-b border-border-primary px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
-            <span className="text-xs text-foreground/50 flex-shrink-0 font-medium">
+            <span className="text-xs text-foreground/50 shrink-0 font-medium">
               Filter:
             </span>
             <button
               onClick={() => setSelectedTag(null)}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
                 !selectedTag
                   ? "bg-accent-primary text-background"
                   : "bg-surface-secondary text-foreground/60 hover:text-foreground/80"
@@ -150,7 +187,7 @@ export default function Home() {
                 onClick={() =>
                   setSelectedTag(selectedTag === tag ? null : tag)
                 }
-                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
                   selectedTag === tag
                     ? "bg-accent-primary text-background"
                     : "bg-surface-secondary text-foreground/60 hover:text-foreground/80"
