@@ -29,13 +29,12 @@ function formatDate(timestamp: number): string {
     return new Date(timestamp).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
     });
   }
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "Just now";
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return "now";
 }
 
 export function LinkCard({
@@ -77,7 +76,7 @@ export function LinkCard({
   };
 
   return (
-    <article className="group relative bg-gray-900/60 backdrop-blur-sm border border-gray-800/50 rounded-2xl overflow-hidden hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-950/40 transition-all duration-300 flex flex-col">
+    <article className="group relative bg-surface-primary border border-border-primary rounded-lg overflow-hidden transition-smooth hover:border-accent-primary/40 hover:shadow-lg hover:shadow-accent-primary/5 flex flex-col h-full">
       {/* Image / thumbnail */}
       <a
         href={url}
@@ -85,26 +84,26 @@ export function LinkCard({
         rel="noopener noreferrer"
         className="block shrink-0"
       >
-        <div className="aspect-video bg-linear-to-br from-gray-800 to-gray-900 overflow-hidden">
+        <div className="aspect-video bg-surface-secondary overflow-hidden relative">
           {image && !imgError ? (
             <img
               src={image}
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-smooth group-hover:scale-105"
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-600/20 to-indigo-600/20 border border-violet-700/20 flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface-secondary to-surface-tertiary">
+              <div className="w-12 h-12 rounded-lg bg-accent-primary/15 border border-accent-primary/20 flex items-center justify-center">
                 {favicon && !faviconError ? (
                   <img
                     src={favicon}
                     alt={domain}
-                    className="w-8 h-8"
+                    className="w-6 h-6"
                     onError={() => setFaviconError(true)}
                   />
                 ) : (
-                  <span className="text-2xl font-bold text-violet-400/50">
+                  <span className="text-lg font-bold text-accent-primary/50">
                     {(domain || title || "L")[0].toUpperCase()}
                   </span>
                 )}
@@ -115,23 +114,23 @@ export function LinkCard({
       </a>
 
       {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 flex flex-col flex-1">
         {/* Site info row */}
         <div className="flex items-center gap-2 mb-2">
           {favicon && !faviconError ? (
             <img
               src={favicon}
               alt={domain}
-              className="w-4 h-4 rounded-sm shrink-0"
+              className="w-3.5 h-3.5 rounded-sm flex-shrink-0"
               onError={() => setFaviconError(true)}
             />
           ) : (
-            <div className="w-4 h-4 rounded-sm bg-violet-700/30 shrink-0" />
+            <div className="w-3.5 h-3.5 rounded-sm bg-accent-primary/20 flex-shrink-0" />
           )}
-          <span className="text-xs text-gray-500 truncate">
+          <span className="text-xs text-foreground/60 truncate font-medium">
             {siteName || domain}
           </span>
-          <span className="ml-auto text-xs text-gray-600 shrink-0">
+          <span className="ml-auto text-xs text-foreground/40 flex-shrink-0 whitespace-nowrap">
             {formatDate(createdAt)}
           </span>
         </div>
@@ -141,31 +140,36 @@ export function LinkCard({
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block mb-1 hover:text-violet-300 transition-colors"
+          className="block mb-1 hover:text-accent-primary transition-colors"
         >
-          <h3 className="text-sm font-semibold text-gray-100 line-clamp-2 leading-snug">
+          <h3 className="text-sm font-semibold text-foreground line-clamp-2">
             {title}
           </h3>
         </a>
 
         {/* Description */}
         {description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-1 flex-1">
+          <p className="text-xs text-foreground/50 line-clamp-2 flex-1">
             {description}
           </p>
         )}
 
         {/* Tags */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3">
-            {tags.map((tag) => (
+          <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-border-secondary">
+            {tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 bg-violet-950/60 text-violet-400 border border-violet-800/30 rounded-full"
+                className="text-xs px-2 py-0.5 bg-accent-primary/10 text-accent-primary border border-accent-primary/20 rounded-full"
               >
                 #{tag}
               </span>
             ))}
+            {tags.length > 3 && (
+              <span className="text-xs px-2 py-0.5 text-foreground/50">
+                +{tags.length - 3}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -175,11 +179,11 @@ export function LinkCard({
         onClick={handleDelete}
         disabled={deleting}
         aria-label="Delete link"
-        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-gray-900/80 border border-gray-700/50 flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto hover:bg-red-950/80 hover:border-red-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 transition-all duration-200 disabled:cursor-not-allowed"
+        className="absolute top-2 right-2 w-7 h-7 rounded-md bg-surface-primary/80 border border-border-primary flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto hover:bg-red-950/30 hover:border-red-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 transition-smooth disabled:cursor-not-allowed"
       >
         {deleting ? (
           <svg
-            className="w-3 h-3 text-gray-400 animate-spin"
+            className="w-3 h-3 text-foreground animate-spin"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -199,7 +203,7 @@ export function LinkCard({
           </svg>
         ) : (
           <svg
-            className="w-3 h-3 text-gray-500 group-hover:text-red-400"
+            className="w-3 h-3 text-foreground/50 group-hover:text-red-400 transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

@@ -14,9 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stashly — Your Personal Link Stash",
+  title: "Stashly — Save & Organize Your Links",
   description:
-    "Save, organize, and rediscover links with rich previews, tags, and instant search.",
+    "A modern link manager to save, organize, and rediscover your favorite URLs with rich previews, tags, and instant search.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
