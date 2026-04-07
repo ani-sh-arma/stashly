@@ -1,37 +1,97 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030712;
-  --foreground: #f1f5f9;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Primary backgrounds */
+  --color-background: #0f0f12;
+  --color-foreground: #e4e6eb;
+  
+  /* Surface colors - dark theme with subtle elevation */
+  --color-surface-primary: #1a1a1e;
+  --color-surface-secondary: #252530;
+  --color-surface-tertiary: #2f2f38;
+  --color-surface-hover: #343842;
+  
+  /* Borders */
+  --color-border-primary: #2f3139;
+  --color-border-secondary: #1f1f26;
+  
+  /* Accent colors - cyan/teal for modern SaaS feel */
+  --color-accent-primary: #06b6d4;
+  --color-accent-secondary: #0d9488;
+  --color-accent-muted: #0e7490;
+  
+  /* Radius tokens */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  
+  /* Font variables */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-/* Hide scrollbar while keeping scroll functionality */
+* {
+  @apply border-border-primary;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-tertiary);
+  border-radius: 4px;
+  border: 2px solid var(--color-background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-hover);
+}
+
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
 
-/* Slide-up animation for the modal */
+/* Smooth animations */
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -39,15 +99,107 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .animate-slide-up {
-  animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--color-accent-primary);
+  color: var(--color-background);
+}
+
+::-moz-selection {
+  background-color: var(--color-accent-primary);
+  color: var(--color-background);
 }
 
 /* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Utility classes */
+.transition-smooth {
+  transition: all 0.2s ease-out;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Focus states for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth link interactions */
+a {
+  @apply transition-smooth;
+}
+
+button {
+  @apply transition-smooth;
+}
+
+input,
+textarea,
+select {
+  @apply transition-smooth;
+}
+
+/* Enhanced scrollbar for better UX */
+body {
+  scrollbar-color: var(--color-surface-tertiary) var(--color-background);
+}
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
