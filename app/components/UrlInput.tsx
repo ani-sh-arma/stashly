@@ -97,7 +97,7 @@ export function UrlInput({ onUrlsAdded, isLoading = false }: UrlInputProps) {
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder="Paste or type URLs... (one per line or all at once)"
-            className="w-full px-4 py-3 bg-surface-secondary border border-border-primary rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-accent-primary/60 focus:ring-1 focus:ring-accent-primary/20 resize-none text-sm transition-smooth"
+            className="w-full px-4 py-3 bg-surface-secondary border border-border-primary rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary/20 resize-none text-sm transition-smooth"
             rows={3}
             disabled={isLoading}
           />
