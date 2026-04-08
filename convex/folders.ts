@@ -50,20 +50,20 @@ export const getFolders = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
-    const all = await ctx.db
+    return await ctx.db
       .query("folders")
       .withIndex("by_user", (q) => q.eq("userId", identity.tokenIdentifier))
+      .filter((q) => {
+        const parentMatch =
+          args.parentId !== undefined
+            ? q.eq(q.field("parentId"), args.parentId)
+            : q.eq(q.field("parentId"), undefined);
+        const vaultMatch = args.isVault
+          ? q.eq(q.field("isVault"), true)
+          : q.neq(q.field("isVault"), true);
+        return q.and(parentMatch, vaultMatch);
+      })
       .collect();
-    return all.filter((f) => {
-      const parentMatch =
-        args.parentId !== undefined
-          ? f.parentId === args.parentId
-          : f.parentId === undefined;
-      const vaultMatch = args.isVault
-        ? f.isVault === true
-        : f.isVault !== true;
-      return parentMatch && vaultMatch;
-    });
   },
 });
 
