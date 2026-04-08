@@ -145,8 +145,9 @@ export const deleteFolder = mutation({
         q.eq("userId", identity.tokenIdentifier),
       )
       .collect();
+    const toDeleteSet = new Set(toDelete);
     for (const link of allLinks) {
-      if (link.folderId && toDelete.includes(link.folderId)) {
+      if (link.folderId && toDeleteSet.has(link.folderId)) {
         await ctx.db.delete(link._id);
       }
     }
