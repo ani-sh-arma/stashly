@@ -2,7 +2,8 @@
 
 import { useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Id } from "@/convex/_generated/dataModel";
+import { useState, useEffect, useCallback } from "react";
 import { UrlInput } from "./components/UrlInput";
 
 interface Metadata {
@@ -17,6 +18,8 @@ interface Metadata {
 
 interface AddLinkProps {
   onClose: () => void;
+  folderId?: Id<"folders">;
+  isVault?: boolean;
 }
 
 interface LinkInput {
@@ -25,7 +28,7 @@ interface LinkInput {
   description?: string;
 }
 
-export function AddLink({ onClose }: AddLinkProps) {
+export function AddLink({ onClose, folderId, isVault }: AddLinkProps) {
   const addLink = useMutation(api.links.addLink);
   const fetchMetadata = useAction(api.metadata.fetchUrlMetadata);
 
@@ -140,6 +143,8 @@ export function AddLink({ onClose }: AddLinkProps) {
         favicon: metadata?.favicon,
         hostname: metadata?.hostname,
         siteName: metadata?.siteName,
+        folderId,
+        isVault,
       });
 
       // Move to next link

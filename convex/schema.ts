@@ -13,7 +13,23 @@ export default defineSchema({
     favicon: v.optional(v.string()),
     hostname: v.optional(v.string()),
     siteName: v.optional(v.string()),
+    folderId: v.optional(v.id("folders")),
+    isVault: v.optional(v.boolean()),
   })
     .index("by_created", ["createdAt"])
     .index("by_user_and_created", ["userId", "createdAt"]),
+
+  folders: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    parentId: v.optional(v.id("folders")),
+    isVault: v.optional(v.boolean()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  vaultSettings: defineTable({
+    userId: v.string(),
+    passwordHash: v.string(),
+    salt: v.string(),
+  }).index("by_user", ["userId"]),
 });
