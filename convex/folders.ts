@@ -104,7 +104,9 @@ export const renameFolder = mutation({
     const folder = await ctx.db.get(args.id);
     if (!folder || folder.userId !== identity.tokenIdentifier)
       throw new Error("Not authorized");
-    await ctx.db.patch(args.id, { name: args.name.trim() });
+    const name = args.name.trim();
+    if (!name) throw new Error("Folder name is required");
+    await ctx.db.patch(args.id, { name });
   },
 });
 
