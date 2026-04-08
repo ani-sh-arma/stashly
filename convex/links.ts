@@ -94,9 +94,10 @@ export const getLinks = query({
         args.folderId ?? null,
         isVault,
       );
+      const allowedIdSet = new Set(allowedIds);
       links = links.filter((l) => {
         const lid: Id<"folders"> | null = l.folderId ?? null;
-        return allowedIds.some((id) => id === lid);
+        return allowedIdSet.has(lid);
       });
     } else {
       links = links.filter((l) => {
