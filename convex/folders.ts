@@ -11,11 +11,32 @@ export const createFolder = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+
+    const name = args.name.trim();
+    if (!name) {
+      throw new Error("Folder name cannot be empty");
+    }
+
+    const isVault = args.isVault ?? false;
+
+    if (args.parentId !== undefined) {
+      const parentFolder = await ctx.db.get(args.parentId);
+      if (!parentFolder) {
+        throw new Error("Parent folder not found");
+      }
+      if (parentFolder.userId !== identity.tokenIdentifier) {
+        throw new Error("Not authorized to use this parent folder");
+      }
+      if ((parentFolder.isVault ?? false) !== isVault) {
+        throw new Error("Parent folder must be in the same space");
+      }
+    }
+
     return await ctx.db.insert("folders", {
       userId: identity.tokenIdentifier,
-      name: args.name.trim(),
+      name,
       parentId: args.parentId,
-      isVault: args.isVault ?? false,
+      isVault,
       createdAt: Date.now(),
     });
   },
