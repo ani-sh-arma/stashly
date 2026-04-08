@@ -107,6 +107,8 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               className="absolute inset-y-0 right-3 flex items-center text-foreground/40 hover:text-foreground/60 transition-colors"
             >
               {showPassword ? (
