@@ -19,6 +19,7 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
   const [deleting, setDeleting] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(name);
+  const [renameError, setRenameError] = useState("");
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,12 +36,13 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!renameValue.trim()) return;
+    setRenameError("");
     try {
       await renameFolder({ id, name: renameValue.trim() });
       setRenaming(false);
       onRenamed?.();
-    } catch {
-      setRenaming(false);
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : "Rename failed");
     }
   };
 
@@ -80,18 +82,21 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
         {renaming ? (
           <form
             onSubmit={handleRename}
-            className="flex-1"
+            className="flex-1 flex flex-col gap-1"
             onClick={(e) => e.stopPropagation()}
           >
             <input
               autoFocus
               type="text"
               value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
+              onChange={(e) => { setRenameValue(e.target.value); setRenameError(""); }}
               onBlur={handleRename}
-              onKeyDown={(e) => e.key === "Escape" && setRenaming(false)}
-              className="w-full px-2 py-1 bg-surface-secondary border border-border-primary rounded text-sm text-foreground focus:outline-none focus:border-accent-primary/60"
+              onKeyDown={(e) => { if (e.key === "Escape") { setRenaming(false); setRenameError(""); } }}
+              className={`w-full px-2 py-1 bg-surface-secondary border rounded text-sm text-foreground focus:outline-none focus:border-accent-primary/60 ${renameError ? "border-red-500/60" : "border-border-primary"}`}
             />
+            {renameError && (
+              <span className="text-xs text-red-400">{renameError}</span>
+            )}
           </form>
         ) : (
           <span className="text-sm font-semibold text-foreground truncate flex-1">

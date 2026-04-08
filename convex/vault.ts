@@ -44,23 +44,30 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
+/** Generates a cryptographically random hex string of the given byte length. */
+function generateRandomHex(byteCount: number): string {
+  const array = new Uint8Array(byteCount);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** 16-byte random salt for PBKDF2. */
 function generateSalt(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return generateRandomHex(16);
 }
 
+/** 32-byte cryptographically random session token. */
 function generateSessionToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return generateRandomHex(32);
 }
 
-/** Session lifetime: 24 hours */
+/**
+ * Fixed 24-hour session lifetime.
+ * Sessions are not sliding-window; they expire 24 h after creation
+ * regardless of activity. Re-authentication is required after expiry.
+ */
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export const hasVault = query({

@@ -49,7 +49,12 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
       setSaving(true);
       try {
         const token = await setupVault({ password });
-        onUnlocked(token as string);
+        if (!token) {
+          setError("Setup failed: could not create vault session");
+          setSaving(false);
+          return;
+        }
+        onUnlocked(token);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Setup failed");
         setSaving(false);
@@ -59,7 +64,7 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
       try {
         const token = await verifyVaultPassword({ password });
         if (token) {
-          onUnlocked(token as string);
+          onUnlocked(token);
         } else {
           setError("Incorrect password");
           setSaving(false);
