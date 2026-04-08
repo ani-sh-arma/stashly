@@ -119,18 +119,18 @@ export const deleteFolder = mutation({
     if (!folder || folder.userId !== identity.tokenIdentifier)
       throw new Error("Not authorized");
 
+    // Collect the user's folders once, then traverse in memory.
+    const userFolders = await ctx.db
+      .query("folders")
+      .withIndex("by_user", (q) => q.eq("userId", identity.tokenIdentifier))
+      .collect();
+
     // Recursively delete all sub-folders and their links
     const toDelete: Id<"folders">[] = [args.id];
     const queue: Id<"folders">[] = [args.id];
     while (queue.length > 0) {
       const current = queue.shift()!;
-      const children = await ctx.db
-        .query("folders")
-        .withIndex("by_user", (q) =>
-          q.eq("userId", identity.tokenIdentifier),
-        )
-        .collect();
-      for (const child of children) {
+      for (const child of userFolders) {
         if (child.parentId === current) {
           toDelete.push(child._id);
           queue.push(child._id);
