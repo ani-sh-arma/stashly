@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { UserButton } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -18,6 +18,7 @@ export default function Home() {
   const [currentFolderId, setCurrentFolderId] = useState<Id<"folders"> | null>(null);
   const [isVaultMode, setIsVaultMode] = useState(false);
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const [vaultToken, setVaultToken] = useState<string | null>(null);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [vaultModalMode, setVaultModalMode] = useState<"setup" | "unlock">("unlock");
 
@@ -30,6 +31,9 @@ export default function Home() {
   // --- UI modals ---
   const [showAddLink, setShowAddLink] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+
+  // --- Convex mutations ---
+  const invalidateVaultSession = useMutation(api.vault.invalidateVaultSession);
 
   // --- Debounce search ---
   useEffect(() => {
@@ -57,12 +61,14 @@ export default function Home() {
     folderId: currentFolderId ?? undefined,
     recursive: searchRecursive,
     isVault: isVaultMode,
+    vaultToken: isVaultMode ? (vaultToken ?? undefined) : undefined,
   });
 
   const allTags = useQuery(api.links.getAllTags, {
     folderId: currentFolderId ?? undefined,
     recursive: searchRecursive,
     isVault: isVaultMode,
+    vaultToken: isVaultMode ? (vaultToken ?? undefined) : undefined,
   });
 
   const folderPath = useQuery(
@@ -72,11 +78,16 @@ export default function Home() {
 
   // --- Vault helpers ---
   const handleVaultButtonClick = () => {
+    if (hasVault === undefined) return; // still loading
     if (isVaultMode) {
-      // Exit vault
+      // Exit vault — invalidate session token server-side
+      if (vaultToken) {
+        invalidateVaultSession({ token: vaultToken }).catch(() => {});
+      }
       setIsVaultMode(false);
       setCurrentFolderId(null);
       setVaultUnlocked(false);
+      setVaultToken(null);
       return;
     }
     if (hasVault === false) {
@@ -91,7 +102,8 @@ export default function Home() {
     }
   };
 
-  const handleVaultUnlocked = () => {
+  const handleVaultUnlocked = (token: string) => {
+    setVaultToken(token);
     setShowVaultModal(false);
     setVaultUnlocked(true);
     setIsVaultMode(true);
@@ -157,7 +169,8 @@ export default function Home() {
             {/* Private Vault button */}
             <button
               onClick={handleVaultButtonClick}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-smooth ${
+              disabled={hasVault === undefined}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-smooth disabled:opacity-50 disabled:cursor-not-allowed ${
                 isVaultMode
                   ? "bg-violet-600/20 text-violet-300 border border-violet-600/40 hover:bg-violet-600/30"
                   : "bg-surface-secondary text-foreground/60 border border-border-primary hover:bg-surface-tertiary hover:text-foreground/80"
@@ -497,6 +510,7 @@ export default function Home() {
           onClose={() => setShowAddLink(false)}
           folderId={currentFolderId ?? undefined}
           isVault={isVaultMode}
+          vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
         />
       )}
 

@@ -4,7 +4,25 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { DatabaseReader } from "./_generated/server";
 
-/** Returns all folder IDs (including root=null) reachable from the given starting folder. */
+/** Validates a vault session token server-side. Returns true if valid. */
+async function validateVaultSession(
+  db: DatabaseReader,
+  userId: string,
+  token: string,
+): Promise<boolean> {
+  const session = await db
+    .query("vaultSessions")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .first();
+  return (
+    session !== null &&
+    session.userId === userId &&
+    session.expiresAt > Date.now()
+  );
+}
+
+/** Returns all folder IDs reachable from the given starting folder.
+ *  Only includes null (root) in the result when rootId itself is null. */
 async function getDescendantFolderIds(
   db: DatabaseReader,
   userId: string,
@@ -33,7 +51,8 @@ async function getDescendantFolderIds(
       if (parentMatch) queue.push(f._id);
     }
   }
-  return [null, ...ids];
+  // Include null (root) only when the search starts at the root
+  return rootId === null ? [null, ...ids] : ids;
 }
 
 export const addLink = mutation({
@@ -48,12 +67,36 @@ export const addLink = mutation({
     siteName: v.optional(v.string()),
     folderId: v.optional(v.id("folders")),
     isVault: v.optional(v.boolean()),
+    vaultToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+
+    if (args.isVault === true) {
+      if (
+        !args.vaultToken ||
+        !(await validateVaultSession(
+          ctx.db,
+          identity.tokenIdentifier,
+          args.vaultToken,
+        ))
+      ) {
+        throw new Error("Vault session invalid or expired");
+      }
+    }
+
     return await ctx.db.insert("links", {
-      ...args,
+      url: args.url,
+      title: args.title,
+      description: args.description,
+      tags: args.tags,
+      image: args.image,
+      favicon: args.favicon,
+      hostname: args.hostname,
+      siteName: args.siteName,
+      folderId: args.folderId,
+      isVault: args.isVault,
       userId: identity.tokenIdentifier,
       createdAt: Date.now(),
     });
@@ -67,10 +110,26 @@ export const getLinks = query({
     folderId: v.optional(v.id("folders")),
     recursive: v.optional(v.boolean()),
     isVault: v.optional(v.boolean()),
+    vaultToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+
+    const isVault = args.isVault === true;
+
+    if (isVault) {
+      if (
+        !args.vaultToken ||
+        !(await validateVaultSession(
+          ctx.db,
+          identity.tokenIdentifier,
+          args.vaultToken,
+        ))
+      ) {
+        return [];
+      }
+    }
 
     let links = await ctx.db
       .query("links")
@@ -81,7 +140,6 @@ export const getLinks = query({
       .collect();
 
     // Space filter (vault vs public)
-    const isVault = args.isVault === true;
     links = links.filter((l) =>
       isVault ? l.isVault === true : l.isVault !== true,
     );
@@ -146,10 +204,26 @@ export const getAllTags = query({
     folderId: v.optional(v.id("folders")),
     recursive: v.optional(v.boolean()),
     isVault: v.optional(v.boolean()),
+    vaultToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+
+    const isVault = args.isVault === true;
+
+    if (isVault) {
+      if (
+        !args.vaultToken ||
+        !(await validateVaultSession(
+          ctx.db,
+          identity.tokenIdentifier,
+          args.vaultToken,
+        ))
+      ) {
+        return [];
+      }
+    }
 
     let links = await ctx.db
       .query("links")
@@ -158,7 +232,6 @@ export const getAllTags = query({
       )
       .collect();
 
-    const isVault = args.isVault === true;
     links = links.filter((l) =>
       isVault ? l.isVault === true : l.isVault !== true,
     );
@@ -170,9 +243,10 @@ export const getAllTags = query({
         args.folderId ?? null,
         isVault,
       );
+      const allowedIdSet = new Set(allowedIds);
       links = links.filter((l) => {
         const lid: Id<"folders"> | null = l.folderId ?? null;
-        return allowedIds.some((id) => id === lid);
+        return allowedIdSet.has(lid);
       });
     } else {
       links = links.filter((l) => {
@@ -187,3 +261,4 @@ export const getAllTags = query({
     return Array.from(tagSet).sort();
   },
 });
+

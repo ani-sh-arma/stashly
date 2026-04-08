@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 interface VaultModalProps {
   mode: "setup" | "unlock";
-  onUnlocked: () => void;
+  onUnlocked: (token: string) => void;
   onClose: () => void;
 }
 
@@ -38,8 +38,8 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
     }
 
     if (mode === "setup") {
-      if (password.length < 4) {
-        setError("Password must be at least 4 characters");
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters");
         return;
       }
       if (password !== confirm) {
@@ -48,8 +48,8 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
       }
       setSaving(true);
       try {
-        await setupVault({ password });
-        onUnlocked();
+        const token = await setupVault({ password });
+        onUnlocked(token as string);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Setup failed");
         setSaving(false);
@@ -57,9 +57,9 @@ export function VaultModal({ mode, onUnlocked, onClose }: VaultModalProps) {
     } else {
       setSaving(true);
       try {
-        const ok = await verifyVaultPassword({ password });
-        if (ok) {
-          onUnlocked();
+        const token = await verifyVaultPassword({ password });
+        if (token) {
+          onUnlocked(token as string);
         } else {
           setError("Incorrect password");
           setSaving(false);

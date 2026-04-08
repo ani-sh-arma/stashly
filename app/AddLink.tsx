@@ -20,6 +20,7 @@ interface AddLinkProps {
   onClose: () => void;
   folderId?: Id<"folders">;
   isVault?: boolean;
+  vaultToken?: string;
 }
 
 interface LinkInput {
@@ -28,7 +29,7 @@ interface LinkInput {
   description?: string;
 }
 
-export function AddLink({ onClose, folderId, isVault }: AddLinkProps) {
+export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps) {
   const addLink = useMutation(api.links.addLink);
   const fetchMetadata = useAction(api.metadata.fetchUrlMetadata);
 
@@ -145,6 +146,7 @@ export function AddLink({ onClose, folderId, isVault }: AddLinkProps) {
         siteName: metadata?.siteName,
         folderId,
         isVault,
+        vaultToken,
       });
 
       // Move to next link

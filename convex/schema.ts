@@ -32,4 +32,12 @@ export default defineSchema({
     passwordHash: v.string(),
     salt: v.string(),
   }).index("by_user", ["userId"]),
+
+  vaultSessions: defineTable({
+    userId: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_token", ["token"]),
 });

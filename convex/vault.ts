@@ -1,13 +1,47 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+const MIN_PASSWORD_LENGTH = 8;
+
+function validatePassword(password: string) {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    );
+  }
+}
+
 async function hashPassword(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(salt + password);
-  const buffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buffer))
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    256,
+  );
+  return Array.from(new Uint8Array(bits))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 function generateSalt(): string {
@@ -17,6 +51,17 @@ function generateSalt(): string {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+
+function generateSessionToken(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Session lifetime: 24 hours */
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export const hasVault = query({
   args: {},
@@ -39,6 +84,8 @@ export const setupVault = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    validatePassword(args.password);
+
     // Check vault doesn't already exist
     const existing = await ctx.db
       .query("vaultSettings")
@@ -56,6 +103,15 @@ export const setupVault = mutation({
       passwordHash,
       salt,
     });
+
+    // Immediately issue a session so the user doesn't need to log in again
+    const token = generateSessionToken();
+    await ctx.db.insert("vaultSessions", {
+      userId: identity.tokenIdentifier,
+      token,
+      expiresAt: Date.now() + SESSION_TTL_MS,
+    });
+    return token;
   },
 });
 
@@ -71,10 +127,34 @@ export const verifyVaultPassword = mutation({
         q.eq("userId", identity.tokenIdentifier),
       )
       .first();
-    if (!settings) return false;
+    if (!settings) return null;
 
     const hash = await hashPassword(args.password, settings.salt);
-    return hash === settings.passwordHash;
+    if (!timingSafeEqual(hash, settings.passwordHash)) return null;
+
+    const token = generateSessionToken();
+    await ctx.db.insert("vaultSessions", {
+      userId: identity.tokenIdentifier,
+      token,
+      expiresAt: Date.now() + SESSION_TTL_MS,
+    });
+    return token;
+  },
+});
+
+export const invalidateVaultSession = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return;
+
+    const session = await ctx.db
+      .query("vaultSessions")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+    if (session && session.userId === identity.tokenIdentifier) {
+      await ctx.db.delete(session._id);
+    }
   },
 });
 
@@ -83,6 +163,8 @@ export const changeVaultPassword = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+
+    validatePassword(args.newPassword);
 
     const settings = await ctx.db
       .query("vaultSettings")
@@ -93,7 +175,7 @@ export const changeVaultPassword = mutation({
     if (!settings) throw new Error("Vault not set up");
 
     const oldHash = await hashPassword(args.oldPassword, settings.salt);
-    if (oldHash !== settings.passwordHash)
+    if (!timingSafeEqual(oldHash, settings.passwordHash))
       throw new Error("Incorrect password");
 
     const newSalt = generateSalt();
@@ -102,5 +184,14 @@ export const changeVaultPassword = mutation({
       passwordHash: newHash,
       salt: newSalt,
     });
+
+    // Invalidate all existing sessions after password change
+    const sessions = await ctx.db
+      .query("vaultSessions")
+      .withIndex("by_user", (q) =>
+        q.eq("userId", identity.tokenIdentifier),
+      )
+      .collect();
+    await Promise.all(sessions.map((s) => ctx.db.delete(s._id)));
   },
 });

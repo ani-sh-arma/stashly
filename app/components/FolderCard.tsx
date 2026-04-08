@@ -35,9 +35,13 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!renameValue.trim()) return;
-    await renameFolder({ id, name: renameValue.trim() });
-    setRenaming(false);
-    onRenamed?.();
+    try {
+      await renameFolder({ id, name: renameValue.trim() });
+      setRenaming(false);
+      onRenamed?.();
+    } catch {
+      setRenaming(false);
+    }
   };
 
   return (
