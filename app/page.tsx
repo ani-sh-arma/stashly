@@ -53,6 +53,7 @@ export default function Home() {
   const folders = useQuery(api.folders.getFolders, {
     parentId: currentFolderId ?? undefined,
     isVault: isVaultMode,
+    vaultToken: isVaultMode ? (vaultToken ?? undefined) : undefined,
   });
 
   const links = useQuery(api.links.getLinks, {
@@ -73,7 +74,12 @@ export default function Home() {
 
   const folderPath = useQuery(
     api.folders.getFolderPath,
-    currentFolderId ? { id: currentFolderId } : "skip",
+    currentFolderId
+      ? {
+          id: currentFolderId,
+          vaultToken: isVaultMode ? (vaultToken ?? undefined) : undefined,
+        }
+      : "skip",
   );
 
   // --- Vault helpers ---
@@ -378,6 +384,7 @@ export default function Home() {
                       id={folder._id}
                       name={folder.name}
                       isVault={isVaultMode}
+                      vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
                       onOpen={handleFolderOpen}
                     />
                   ))}
@@ -518,6 +525,7 @@ export default function Home() {
         <CreateFolderModal
           parentId={currentFolderId ?? undefined}
           isVault={isVaultMode}
+          vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
           onClose={() => setShowCreateFolder(false)}
         />
       )}

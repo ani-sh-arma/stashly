@@ -8,10 +8,11 @@ import { useState, useEffect } from "react";
 interface CreateFolderModalProps {
   parentId?: Id<"folders">;
   isVault?: boolean;
+  vaultToken?: string;
   onClose: () => void;
 }
 
-export function CreateFolderModal({ parentId, isVault, onClose }: CreateFolderModalProps) {
+export function CreateFolderModal({ parentId, isVault, vaultToken, onClose }: CreateFolderModalProps) {
   const createFolder = useMutation(api.folders.createFolder);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -31,7 +32,7 @@ export function CreateFolderModal({ parentId, isVault, onClose }: CreateFolderMo
     setSaving(true);
     setError("");
     try {
-      await createFolder({ name: name.trim(), parentId, isVault });
+      await createFolder({ name: name.trim(), parentId, isVault, vaultToken });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create folder");

@@ -9,11 +9,12 @@ interface FolderCardProps {
   id: Id<"folders">;
   name: string;
   isVault?: boolean;
+  vaultToken?: string;
   onOpen: (id: Id<"folders">) => void;
   onRenamed?: () => void;
 }
 
-export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardProps) {
+export function FolderCard({ id, name, isVault, vaultToken, onOpen, onRenamed }: FolderCardProps) {
   const deleteFolder = useMutation(api.folders.deleteFolder);
   const renameFolder = useMutation(api.folders.renameFolder);
   const [deleting, setDeleting] = useState(false);
@@ -27,7 +28,7 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
     if (!confirm(`Delete folder "${name}" and all its contents?`)) return;
     setDeleting(true);
     try {
-      await deleteFolder({ id });
+      await deleteFolder({ id, vaultToken });
     } catch {
       setDeleting(false);
     }
@@ -35,10 +36,15 @@ export function FolderCard({ id, name, isVault, onOpen, onRenamed }: FolderCardP
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!renameValue.trim()) return;
+    if (!renameValue.trim()) {
+      setRenameError("Folder name is required");
+      setRenaming(false);
+      setRenameValue(name);
+      return;
+    }
     setRenameError("");
     try {
-      await renameFolder({ id, name: renameValue.trim() });
+      await renameFolder({ id, name: renameValue.trim(), vaultToken });
       setRenaming(false);
       onRenamed?.();
     } catch (err) {

@@ -86,6 +86,19 @@ export const addLink = mutation({
       }
     }
 
+    // Validate folderId ownership and space match
+    if (args.folderId !== undefined) {
+      const folder = await ctx.db.get(args.folderId);
+      if (!folder || folder.userId !== identity.tokenIdentifier) {
+        throw new Error("Folder not found or not authorized");
+      }
+      const folderIsVault = folder.isVault === true;
+      const linkIsVault = args.isVault === true;
+      if (folderIsVault !== linkIsVault) {
+        throw new Error("Folder and link must be in the same space");
+      }
+    }
+
     return await ctx.db.insert("links", {
       url: args.url,
       title: args.title,
