@@ -44,6 +44,7 @@ export default defineSchema({
   tags: defineTable({
     userId: v.string(),
     name: v.string(),
+    isVault: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])

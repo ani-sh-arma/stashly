@@ -130,11 +130,22 @@ export const addLink = mutation({
       }
     }
 
+    const isVault = args.isVault === true;
+
+    // Normalize, deduplicate, and drop empty tag names server-side
+    const normalizedTags = [
+      ...new Set(
+        args.tags
+          .map((t) => t.trim().toLowerCase().replace(/[^a-z0-9-]/g, ""))
+          .filter(Boolean),
+      ),
+    ];
+
     const linkId = await ctx.db.insert("links", {
       url: args.url,
       title: args.title,
       description: args.description,
-      tags: args.tags,
+      tags: normalizedTags,
       image: args.image,
       favicon: args.favicon,
       hostname: args.hostname,
@@ -145,9 +156,9 @@ export const addLink = mutation({
       createdAt: Date.now(),
     });
 
-    // Persist any new tags to the global tags table
-    if (args.tags.length > 0) {
-      await ensureTagsExist(ctx.db, identity.tokenIdentifier, args.tags);
+    // Persist any new tags to the global tags table (scoped to the same space)
+    if (normalizedTags.length > 0) {
+      await ensureTagsExist(ctx.db, identity.tokenIdentifier, normalizedTags, isVault);
     }
 
     return linkId;

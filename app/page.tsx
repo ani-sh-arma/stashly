@@ -83,17 +83,20 @@ export default function Home() {
   );
 
   // --- Vault helpers ---
+  const exitVault = () => {
+    if (vaultToken) {
+      invalidateVaultSession({ token: vaultToken }).catch(() => {});
+    }
+    setIsVaultMode(false);
+    setCurrentFolderId(null);
+    setVaultUnlocked(false);
+    setVaultToken(null);
+  };
+
   const handleVaultButtonClick = () => {
     if (hasVault === undefined) return; // still loading
     if (isVaultMode) {
-      // Exit vault — invalidate session token server-side
-      if (vaultToken) {
-        invalidateVaultSession({ token: vaultToken }).catch(() => {});
-      }
-      setIsVaultMode(false);
-      setCurrentFolderId(null);
-      setVaultUnlocked(false);
-      setVaultToken(null);
+      exitVault();
       return;
     }
     if (hasVault === false) {
@@ -212,13 +215,7 @@ export default function Home() {
             <button
               onClick={() => {
                 if (isVaultMode) {
-                  if (vaultToken) {
-                    invalidateVaultSession({ token: vaultToken }).catch(() => {});
-                  }
-                  setIsVaultMode(false);
-                  setCurrentFolderId(null);
-                  setVaultUnlocked(false);
-                  setVaultToken(null);
+                  exitVault();
                 }
               }}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-smooth ${

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -59,7 +59,7 @@ export function TagSelector({
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       if (filtered.length > 0) {
@@ -91,9 +91,9 @@ export function TagSelector({
   const accentCls = isVault
     ? "text-violet-400 bg-violet-500/15 border-violet-500/30 hover:bg-violet-500/25"
     : "text-accent-primary bg-accent-primary/15 border-accent-primary/30 hover:bg-accent-primary/25";
-  const focusCls = isVault
-    ? "focus:border-violet-500/60 focus:ring-violet-500/20"
-    : "focus:border-accent-primary/60 focus:ring-accent-primary/20";
+  const focusWithinCls = isVault
+    ? "focus-within:border-violet-500/60 focus-within:ring-1 focus-within:ring-violet-500/20"
+    : "focus-within:border-accent-primary/60 focus-within:ring-1 focus-within:ring-accent-primary/20";
   const tagOptionCls = isVault
     ? "text-violet-300"
     : "text-foreground/80";
@@ -102,7 +102,7 @@ export function TagSelector({
     <div ref={containerRef} className="relative">
       {/* Input area */}
       <div
-        className={`flex flex-wrap gap-1.5 px-3 py-2.5 bg-surface-secondary border border-border-primary rounded-lg min-h-11 transition-smooth cursor-text ${focusCls} ${open ? (isVault ? "border-violet-500/60 ring-1 ring-violet-500/20" : "border-accent-primary/60 ring-1 ring-accent-primary/20") : ""}`}
+        className={`flex flex-wrap gap-1.5 px-3 py-2.5 bg-surface-secondary border border-border-primary rounded-lg min-h-11 transition-smooth cursor-text ${focusWithinCls}`}
         onClick={() => {
           setOpen(true);
           inputRef.current?.focus();
@@ -120,6 +120,7 @@ export function TagSelector({
                 e.stopPropagation();
                 onChange(selectedTags.filter((t) => t !== tag));
               }}
+              aria-label={`Remove tag #${tag}`}
               className="opacity-60 hover:opacity-100 transition-opacity"
             >
               <svg

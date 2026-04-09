@@ -34,7 +34,10 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
   const addLink = useMutation(api.links.addLink);
   const fetchMetadata = useAction(api.metadata.fetchUrlMetadata);
   const createTag = useMutation(api.tags.createTag);
-  const userTags = useQuery(api.tags.getUserTags) ?? [];
+  const userTags = useQuery(api.tags.getUserTags, {
+    isVault,
+    vaultToken: isVault ? vaultToken : undefined,
+  }) ?? [];
 
   const [linksToAdd, setLinksToAdd] = useState<LinkInput[]>([]);
   const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
@@ -64,11 +67,26 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
     }
   }, [currentLinkIndex, linksToAdd]);
 
+  /** Common multi-part TLD suffixes that should not be treated as the SLD. */
+  const MULTI_PART_TLDS = new Set([
+    "co.uk", "co.jp", "co.in", "co.nz", "co.za", "co.kr", "co.id",
+    "com.au", "com.br", "com.mx", "com.sg", "com.hk", "com.tw",
+    "org.uk", "net.au", "gov.uk", "gov.au",
+  ]);
+
   /** Extract a clean domain tag from a hostname string.
-   *  e.g. "www.github.com" → "github"  |  "docs.example.io" → "example" */
+   *  e.g. "www.github.com" → "github"  |  "bbc.co.uk" → "bbc" */
   const domainTagFromHostname = (hostname: string): string => {
-    const parts = hostname.replace(/^www\./, "").split(".");
-    // Use the second-to-last segment (the SLD) as the tag
+    const h = hostname.replace(/^www\./, "").toLowerCase();
+    const parts = h.split(".");
+    if (parts.length >= 3) {
+      const lastTwo = parts.slice(-2).join(".");
+      if (MULTI_PART_TLDS.has(lastTwo)) {
+        // e.g. bbc.co.uk → "bbc"
+        return parts[parts.length - 3].replace(/[^a-z0-9-]/g, "");
+      }
+    }
+    // Standard: use the second-to-last segment (the SLD)
     return parts.length >= 2
       ? parts[parts.length - 2].replace(/[^a-z0-9-]/g, "")
       : parts[0].replace(/[^a-z0-9-]/g, "");
@@ -123,7 +141,11 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
 
   const handleCreateTag = async (name: string): Promise<string | null> => {
     try {
-      return await createTag({ name });
+      return await createTag({
+        name,
+        isVault,
+        vaultToken: isVault ? vaultToken : undefined,
+      });
     } catch {
       return null;
     }
