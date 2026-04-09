@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { DatabaseReader, DatabaseWriter } from "./_generated/server";
+import { ensureTagsExist } from "./tags";
 
 /** Validates a vault session token server-side (read-only; for use in queries). */
 async function validateVaultSession(
@@ -129,11 +130,22 @@ export const addLink = mutation({
       }
     }
 
-    return await ctx.db.insert("links", {
+    const isVault = args.isVault === true;
+
+    // Normalize, deduplicate, and drop empty tag names server-side
+    const normalizedTags = [
+      ...new Set(
+        args.tags
+          .map((t) => t.trim().toLowerCase().replace(/[^a-z0-9-]/g, ""))
+          .filter(Boolean),
+      ),
+    ];
+
+    const linkId = await ctx.db.insert("links", {
       url: args.url,
       title: args.title,
       description: args.description,
-      tags: args.tags,
+      tags: normalizedTags,
       image: args.image,
       favicon: args.favicon,
       hostname: args.hostname,
@@ -143,6 +155,13 @@ export const addLink = mutation({
       userId: identity.tokenIdentifier,
       createdAt: Date.now(),
     });
+
+    // Persist any new tags to the global tags table (scoped to the same space)
+    if (normalizedTags.length > 0) {
+      await ensureTagsExist(ctx.db, identity.tokenIdentifier, normalizedTags, isVault);
+    }
+
+    return linkId;
   },
 });
 

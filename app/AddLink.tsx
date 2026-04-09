@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useAction } from "convex/react";
+import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useState, useEffect, useCallback } from "react";
 import { UrlInput } from "./components/UrlInput";
+import { TagSelector } from "./components/TagSelector";
 
 interface Metadata {
   title?: string;
@@ -32,13 +33,17 @@ interface LinkInput {
 export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps) {
   const addLink = useMutation(api.links.addLink);
   const fetchMetadata = useAction(api.metadata.fetchUrlMetadata);
+  const createTag = useMutation(api.tags.createTag);
+  const userTags = useQuery(api.tags.getUserTags, {
+    isVault,
+    vaultToken: isVault ? vaultToken : undefined,
+  }) ?? [];
 
   const [linksToAdd, setLinksToAdd] = useState<LinkInput[]>([]);
   const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
   const [metadata, setMetadata] = useState<Metadata | null>(null);
   const [fetching, setFetching] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -62,6 +67,31 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
     }
   }, [currentLinkIndex, linksToAdd]);
 
+  /** Common multi-part TLD suffixes that should not be treated as the SLD. */
+  const MULTI_PART_TLDS = new Set([
+    "co.uk", "co.jp", "co.in", "co.nz", "co.za", "co.kr", "co.id",
+    "com.au", "com.br", "com.mx", "com.sg", "com.hk", "com.tw",
+    "org.uk", "net.au", "gov.uk", "gov.au",
+  ]);
+
+  /** Extract a clean domain tag from a hostname string.
+   *  e.g. "www.github.com" → "github"  |  "bbc.co.uk" → "bbc" */
+  const domainTagFromHostname = (hostname: string): string => {
+    const h = hostname.replace(/^www\./, "").toLowerCase();
+    const parts = h.split(".");
+    if (parts.length >= 3) {
+      const lastTwo = parts.slice(-2).join(".");
+      if (MULTI_PART_TLDS.has(lastTwo)) {
+        // e.g. bbc.co.uk → "bbc"
+        return parts[parts.length - 3].replace(/[^a-z0-9-]/g, "");
+      }
+    }
+    // Standard: use the second-to-last segment (the SLD)
+    return parts.length >= 2
+      ? parts[parts.length - 2].replace(/[^a-z0-9-]/g, "")
+      : parts[0].replace(/[^a-z0-9-]/g, "");
+  };
+
   const handleFetchMetadata = useCallback(
     async (urlToFetch: string) => {
       const trimmed = urlToFetch.trim();
@@ -81,6 +111,16 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
           if (result.title && !title) setTitle(result.title);
           if (result.description && !description)
             setDescription(result.description);
+
+          // Auto-add domain tag
+          if (result.hostname) {
+            const domainTag = domainTagFromHostname(result.hostname);
+            if (domainTag) {
+              setTags((prev) =>
+                prev.includes(domainTag) ? prev : [...prev, domainTag],
+              );
+            }
+          }
         }
       } catch {
         setMetadata({ error: "Failed to fetch metadata" });
@@ -99,23 +139,15 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
     }
   };
 
-  const commitTag = () => {
-    const tag = tagInput
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "");
-    if (tag && !tags.includes(tag)) {
-      setTags((prev) => [...prev, tag]);
-    }
-    setTagInput("");
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      commitTag();
-    } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-      setTags((prev) => prev.slice(0, -1));
+  const handleCreateTag = async (name: string): Promise<string | null> => {
+    try {
+      return await createTag({
+        name,
+        isVault,
+        vaultToken: isVault ? vaultToken : undefined,
+      });
+    } catch {
+      return null;
     }
   };
 
@@ -149,7 +181,7 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
         vaultToken,
       });
 
-      // Move to next link
+      // Move to next link — keep tags so users don't re-enter them for related links
       if (currentLinkIndex < linksToAdd.length - 1) {
         setCurrentLinkIndex(currentLinkIndex + 1);
         setTitle("");
@@ -347,49 +379,13 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
                     Tags{" "}
                     <span className="normal-case text-foreground/50">(optional)</span>
                   </label>
-                  <div className="flex flex-wrap gap-1.5 px-3 py-2.5 bg-surface-secondary border border-border-primary rounded-lg min-h-11 focus-within:border-accent-primary/60 focus-within:ring-1 focus-within:ring-accent-primary/20 transition-smooth cursor-text">
-                    {tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="flex items-center gap-1 px-2 py-0.5 bg-accent-primary/15 text-accent-primary border border-accent-primary/30 rounded-md text-xs"
-                      >
-                        #{tag}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setTags((prev) => prev.filter((t) => t !== tag))
-                          }
-                          className="text-accent-primary/60 hover:text-accent-primary transition-colors"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      type="text"
-                      placeholder={tags.length === 0 ? "design, tools…" : ""}
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleTagKeyDown}
-                      onBlur={commitTag}
-                      className="flex-1 min-w-20 bg-transparent text-foreground placeholder-foreground/40 outline-none text-sm py-0.5"
-                    />
-                  </div>
-                  <p className="text-xs text-foreground/50 mt-1">
-                    Press Enter or comma to add
-                  </p>
+                  <TagSelector
+                    selectedTags={tags}
+                    availableTags={userTags}
+                    onChange={setTags}
+                    onCreateTag={handleCreateTag}
+                    isVault={isVault}
+                  />
                 </div>
               </>
             )}
@@ -460,4 +456,3 @@ export function AddLink({ onClose, folderId, isVault, vaultToken }: AddLinkProps
     </div>
   );
 }
-
