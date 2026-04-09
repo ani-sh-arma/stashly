@@ -11,6 +11,7 @@ import { AddLink } from "./AddLink";
 import { CreateFolderModal } from "./components/CreateFolderModal";
 import { VaultModal } from "./components/VaultModal";
 import { Breadcrumb } from "./components/Breadcrumb";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { clerkUserButtonAppearance } from "./clerkAppearance";
 
 export default function Home() {
@@ -535,29 +536,35 @@ export default function Home() {
 
       {/* Modals */}
       {showAddLink && (
-        <AddLink
-          onClose={() => setShowAddLink(false)}
-          folderId={currentFolderId ?? undefined}
-          isVault={isVaultMode}
-          vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
-        />
+        <ErrorBoundary fallback={null} onError={() => setShowAddLink(false)}>
+          <AddLink
+            onClose={() => setShowAddLink(false)}
+            folderId={currentFolderId ?? undefined}
+            isVault={isVaultMode}
+            vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
+          />
+        </ErrorBoundary>
       )}
 
       {showCreateFolder && (
-        <CreateFolderModal
-          parentId={currentFolderId ?? undefined}
-          isVault={isVaultMode}
-          vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
-          onClose={() => setShowCreateFolder(false)}
-        />
+        <ErrorBoundary fallback={null} onError={() => setShowCreateFolder(false)}>
+          <CreateFolderModal
+            parentId={currentFolderId ?? undefined}
+            isVault={isVaultMode}
+            vaultToken={isVaultMode ? (vaultToken ?? undefined) : undefined}
+            onClose={() => setShowCreateFolder(false)}
+          />
+        </ErrorBoundary>
       )}
 
       {showVaultModal && (
-        <VaultModal
-          mode={vaultModalMode}
-          onUnlocked={handleVaultUnlocked}
-          onClose={() => setShowVaultModal(false)}
-        />
+        <ErrorBoundary fallback={null} onError={() => setShowVaultModal(false)}>
+          <VaultModal
+            mode={vaultModalMode}
+            onUnlocked={handleVaultUnlocked}
+            onClose={() => setShowVaultModal(false)}
+          />
+        </ErrorBoundary>
       )}
     </main>
   );
