@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { DatabaseReader, DatabaseWriter } from "./_generated/server";
+import { ensureTagsExist } from "./tags";
 
 /** Validates a vault session token server-side (read-only; for use in queries). */
 async function validateVaultSession(
@@ -129,7 +130,7 @@ export const addLink = mutation({
       }
     }
 
-    return await ctx.db.insert("links", {
+    const linkId = await ctx.db.insert("links", {
       url: args.url,
       title: args.title,
       description: args.description,
@@ -143,6 +144,13 @@ export const addLink = mutation({
       userId: identity.tokenIdentifier,
       createdAt: Date.now(),
     });
+
+    // Persist any new tags to the global tags table
+    if (args.tags.length > 0) {
+      await ensureTagsExist(ctx.db, identity.tokenIdentifier, args.tags);
+    }
+
+    return linkId;
   },
 });
 

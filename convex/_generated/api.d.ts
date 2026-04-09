@@ -11,6 +11,7 @@
 import type * as folders from "../folders.js";
 import type * as links from "../links.js";
 import type * as metadata from "../metadata.js";
+import type * as tags from "../tags.js";
 import type * as vault from "../vault.js";
 
 import type {
@@ -23,6 +24,7 @@ declare const fullApi: ApiFromModules<{
   folders: typeof folders;
   links: typeof links;
   metadata: typeof metadata;
+  tags: typeof tags;
   vault: typeof vault;
 }>;
 

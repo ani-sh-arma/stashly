@@ -165,40 +165,11 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <span className="text-lg font-bold text-foreground">
-              Stashly{isVaultMode && <span className="text-violet-400 ml-1">— Vault</span>}
-            </span>
+            <span className="text-lg font-bold text-foreground">Stashly</span>
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
-            {/* Private Vault button */}
-            <button
-              onClick={handleVaultButtonClick}
-              disabled={hasVault === undefined}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-smooth disabled:opacity-50 disabled:cursor-not-allowed ${
-                isVaultMode
-                  ? "bg-violet-600/20 text-violet-300 border border-violet-600/40 hover:bg-violet-600/30"
-                  : "bg-surface-secondary text-foreground/60 border border-border-primary hover:bg-surface-tertiary hover:text-foreground/80"
-              }`}
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isVaultMode ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                )}
-              </svg>
-              <span className="hidden sm:inline">
-                {isVaultMode ? "Exit Vault" : "Private Vault"}
-              </span>
-            </button>
-
             {/* New Folder button */}
             <button
               onClick={() => setShowCreateFolder(true)}
@@ -229,9 +200,63 @@ export default function Home() {
             <UserButton appearance={clerkUserButtonAppearance} />
           </div>
         </div>
+
+        {/* Tab bar — Normal / Private Vault */}
+        <div
+          className={`border-t ${
+            isVaultMode ? "border-violet-900/30" : "border-border-primary"
+          }`}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-0">
+            {/* My Links tab */}
+            <button
+              onClick={() => {
+                if (isVaultMode) {
+                  if (vaultToken) {
+                    invalidateVaultSession({ token: vaultToken }).catch(() => {});
+                  }
+                  setIsVaultMode(false);
+                  setCurrentFolderId(null);
+                  setVaultUnlocked(false);
+                  setVaultToken(null);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-smooth ${
+                !isVaultMode
+                  ? "border-accent-primary text-accent-primary"
+                  : "border-transparent text-foreground/50 hover:text-foreground/80"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              My Links
+            </button>
+
+            {/* Private Vault tab */}
+            <button
+              onClick={handleVaultButtonClick}
+              disabled={hasVault === undefined}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed ${
+                isVaultMode
+                  ? "border-violet-500 text-violet-400"
+                  : "border-transparent text-foreground/50 hover:text-foreground/80"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isVaultMode ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                )}
+              </svg>
+              Private Vault
+            </button>
+          </div>
+        </div>
       </header>
 
-      {/* Vault banner */}
+      {/* Vault info banner */}
       {isVaultMode && (
         <div className="bg-violet-950/30 border-b border-violet-900/30 px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs text-violet-300/70">
