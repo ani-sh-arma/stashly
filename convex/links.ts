@@ -2,9 +2,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { DatabaseReader } from "./_generated/server";
+import { DatabaseReader, DatabaseWriter } from "./_generated/server";
 
-/** Validates a vault session token server-side. Returns true if valid. */
+/** Validates a vault session token server-side (read-only; for use in queries). */
 async function validateVaultSession(
   db: DatabaseReader,
   userId: string,
@@ -21,8 +21,31 @@ async function validateVaultSession(
   );
 }
 
+/**
+ * Validates a vault session token and deletes it if expired (for use in mutations).
+ * This keeps the vaultSessions table from growing unbounded.
+ */
+async function validateAndCleanVaultSession(
+  db: DatabaseWriter,
+  userId: string,
+  token: string | undefined,
+): Promise<boolean> {
+  if (!token) return false;
+  const session = await db
+    .query("vaultSessions")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .first();
+  if (session === null) return false;
+  if (session.expiresAt <= Date.now()) {
+    await db.delete(session._id);
+    return false;
+  }
+  return session.userId === userId;
+}
+
 /** Returns all folder IDs reachable from the given starting folder.
- *  Only includes null (root) in the result when rootId itself is null. */
+ *  Only includes null (root) in the result when rootId itself is null.
+ *  Uses a parentId→children adjacency map for O(n) traversal. */
 async function getDescendantFolderIds(
   db: DatabaseReader,
   userId: string,
@@ -38,17 +61,25 @@ async function getDescendantFolderIds(
     isVault ? f.isVault === true : f.isVault !== true,
   );
 
+  // Build parentId → children adjacency map for O(n) BFS
+  const childrenOf = new Map<Id<"folders"> | null, Id<"folders">[]>();
+  for (const f of spaceFolders) {
+    const parentKey: Id<"folders"> | null = f.parentId ?? null;
+    const siblings = childrenOf.get(parentKey);
+    if (siblings) {
+      siblings.push(f._id);
+    } else {
+      childrenOf.set(parentKey, [f._id]);
+    }
+  }
+
   const ids: Array<Id<"folders">> = [];
   const queue: Array<Id<"folders"> | null> = [rootId];
   while (queue.length > 0) {
     const current = queue.shift()!;
     if (current !== null) ids.push(current);
-    for (const f of spaceFolders) {
-      const parentMatch =
-        current === null
-          ? f.parentId === undefined
-          : f.parentId === current;
-      if (parentMatch) queue.push(f._id);
+    for (const childId of childrenOf.get(current) ?? []) {
+      queue.push(childId);
     }
   }
   // Include null (root) only when the search starts at the root
@@ -75,8 +106,7 @@ export const addLink = mutation({
 
     if (args.isVault === true) {
       if (
-        !args.vaultToken ||
-        !(await validateVaultSession(
+        !(await validateAndCleanVaultSession(
           ctx.db,
           identity.tokenIdentifier,
           args.vaultToken,

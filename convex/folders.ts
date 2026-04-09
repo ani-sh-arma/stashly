@@ -1,9 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { DatabaseReader } from "./_generated/server";
+import { DatabaseReader, DatabaseWriter } from "./_generated/server";
 
-/** Validates a vault session token server-side. Returns true if valid. */
+/** Validates a vault session token server-side (read-only; for use in queries). */
 async function validateVaultSession(
   db: DatabaseReader,
   userId: string,
@@ -19,6 +19,28 @@ async function validateVaultSession(
     session.userId === userId &&
     session.expiresAt > Date.now()
   );
+}
+
+/**
+ * Validates a vault session token and deletes it if expired (for use in mutations).
+ * This keeps the vaultSessions table from growing unbounded.
+ */
+async function validateAndCleanVaultSession(
+  db: DatabaseWriter,
+  userId: string,
+  token: string | undefined,
+): Promise<boolean> {
+  if (!token) return false;
+  const session = await db
+    .query("vaultSessions")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .first();
+  if (session === null) return false;
+  if (session.expiresAt <= Date.now()) {
+    await db.delete(session._id);
+    return false;
+  }
+  return session.userId === userId;
 }
 
 export const createFolder = mutation({
@@ -41,7 +63,7 @@ export const createFolder = mutation({
 
     if (isVault) {
       if (
-        !(await validateVaultSession(
+        !(await validateAndCleanVaultSession(
           ctx.db,
           identity.tokenIdentifier,
           args.vaultToken,
@@ -174,7 +196,7 @@ export const renameFolder = mutation({
 
     if (folder.isVault) {
       if (
-        !(await validateVaultSession(
+        !(await validateAndCleanVaultSession(
           ctx.db,
           identity.tokenIdentifier,
           args.vaultToken,
@@ -204,7 +226,7 @@ export const deleteFolder = mutation({
 
     if (folder.isVault) {
       if (
-        !(await validateVaultSession(
+        !(await validateAndCleanVaultSession(
           ctx.db,
           identity.tokenIdentifier,
           args.vaultToken,
