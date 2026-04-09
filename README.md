@@ -4,6 +4,7 @@
 - [x] Twitter like textbox for adding URLs
 - [x] Multiple URLs addition at once. (Handled like vercel handles env vars)
 - [x] Google Auth and email auth using clerk
-- [ ] Private vault feature for each account managed by a password (with completely seperate tags and eevrything)
-- [ ] Tag selection dropdown with search and option to add new tag if searched one is not in the db
-- [ ] Auto tag registration for each new top level domain and auto domain tag selection for each URL.
+- [x] Private vault feature for each account managed by a password (with completely seperate tags and eevrything)
+- [x] Tag selection dropdown with search and option to add new tag if searched one is not in the db
+- [x] Auto tag registration for each new top level domain and auto domain tag selection for each URL.
+- [ ] Fix layout issues and multiple URL addition bugs
